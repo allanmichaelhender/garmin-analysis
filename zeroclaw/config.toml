@@ -1,0 +1,49 @@
+# ZeroClaw Configuration for Docker
+
+# LLM Provider Configuration
+[providers.models.anthropic]
+provider = "anthropic"
+model = "claude-sonnet-4-20250514"
+api_key = "${ANTHROPIC_API_KEY}"
+
+# Alternative: OpenAI
+# [providers.models.openai]
+# provider = "openai"
+# model = "gpt-4-turbo"
+# api_key = "${OPENAI_API_KEY}"
+
+# Alternative: Ollama (local)
+# [providers.models.ollama]
+# provider = "ollama"
+# model = "llama3:70b"
+# base_url = "http://host.docker.internal:11434"
+
+# MCP Server Configuration
+[mcp_servers.garmin]
+transport = "http"
+url = "http://backend:8000/mcp"
+
+# Channel Configuration
+[channels.cli]
+enabled = true
+
+# Discord Channel (optional)
+# [channels.discord]
+# enabled = true
+# token = "${DISCORD_BOT_TOKEN}"
+
+# Telegram Channel (optional)
+# [channels.telegram]
+# enabled = true
+# token = "${TELEGRAM_BOT_TOKEN}"
+
+# Security Configuration
+[security]
+autonomy = "supervised"
+approval_medium = true
+approval_high = true
+tool_receipts = true
+
+# Logging
+[logging]
+level = "info"

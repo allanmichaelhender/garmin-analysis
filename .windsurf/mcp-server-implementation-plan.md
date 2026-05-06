@@ -1,16 +1,11 @@
 # MCP Server Implementation Plan
 
-## Overview
-
-Implementation plan for building a Model Context Protocol (MCP) server that exposes Garmin/Strava fitness data as tools for conversational querying.
-
-**Reference:** Complete specification available in `mcp-server-spec.md` (2507 lines with full code implementations)
+Implementation plan for building a Model Context Protocol (MCP) server that exposes Garmin fitness data as tools for ZeroClaw agent integration.
 
 **Related Guides:**
 
-- `mcp-server-quickstart.md` - Step-by-step setup instructions
-- `mcp-server-testing-guide.md` - Claude Desktop and ZeroClaw testing procedures
-- `mcp-server-data-ingestion.md` - Data ingestion workflows
+- `readme.md` - Project overview and quickstart
+- `zeroclaw-integration.md` - ZeroClaw setup and configuration
 
 ---
 
@@ -18,10 +13,10 @@ Implementation plan for building a Model Context Protocol (MCP) server that expo
 
 ### 1.1 Create Project Structure
 
-- [ ] Create root directory `mcp-server/`
-- [ ] Create directory structure:
+- [x] Create root directory `backend/`
+- [x] Create directory structure:
   ```
-  mcp-server/
+  backend/
   ├── app/
   │   ├── clients/
   │   ├── tools/
@@ -33,26 +28,26 @@ Implementation plan for building a Model Context Protocol (MCP) server that expo
 
 ### 1.2 Create Configuration Files
 
-- [ ] Create `docker-compose.yml` (complete version from spec section 5)
-- [ ] Create `Dockerfile` (complete version from spec section 6)
-- [ ] Create `requirements.txt` (complete version from spec section 7)
-- [ ] Create `.env.example` (complete version from spec section 8)
-- [ ] Create `.gitignore` (from spec section 9)
+- [x] Create `docker-compose.yml` in root with backend and zeroclaw services
+- [x] Create `backend/Dockerfile` for FastAPI application with FastMCP
+- [x] Create `backend/requirements.txt` with all dependencies
+- [x] Create `.env.example` with environment variable templates
+- [ ] Create `.gitignore` for sensitive files
 
 ### 1.3 Create Python Package Files
 
-- [ ] Create `app/__init__.py`
-- [ ] Create `app/clients/__init__.py`
-- [ ] Create `app/tools/__init__.py`
-- [ ] Create `app/models/__init__.py`
-- [ ] Create `app/config.py`
+- [x] Create `backend/app/__init__.py`
+- [x] Create `backend/app/clients/__init__.py`
+- [x] Create `backend/app/tools/__init__.py`
+- [x] Create `backend/app/models/__init__.py`
+- [x] Create `backend/app/config.py`
 
 ### 1.4 Initialize Database
 
-- [ ] Create `app/database.py` with complete SQLAlchemy models (spec section 3)
-- [ ] Set up Alembic configuration (spec section 10)
+- [ ] Create `app/database.py` with sync SQLAlchemy models for activities, hr_data, user_feedback, llm_summaries
+- [ ] Set up Alembic for database migrations
 - [ ] Create initial migration `alembic/versions/001_initial_schema.py`
-- [ ] Test database connectivity
+- [ ] Test Neon PostgreSQL connectivity
 
 ---
 
@@ -60,28 +55,21 @@ Implementation plan for building a Model Context Protocol (MCP) server that expo
 
 ### 2.1 Garmin Client
 
-- [ ] Create `app/clients/garmin.py` (complete code from spec section 1)
+- [ ] Create `app/clients/garmin.py` using python-garminconnect library
+- [ ] Implement authentication with email/password
+- [ ] Implement `get_activities()` method
+- [ ] Implement `get_activity_details()` method
+- [ ] Implement `extract_hr_time_series()` method
 - [ ] Test authentication with Garmin Connect
-- [ ] Test `get_activities()` method
-- [ ] Test `get_activity_details()` method
-- [ ] Test `extract_hr_time_series()` method
-
-### 2.2 Strava Client
-
-- [ ] Create `app/clients/strava.py` (complete code from spec section 2)
-- [ ] Test OAuth authentication
-- [ ] Test token refresh mechanism
-- [ ] Test `get_latest_activity()` method
-- [ ] Test `get_activities_since()` method
 
 ---
 
 ## Phase 3: MCP Protocol Implementation
 
-### 3.1 FastAPI Server
+### 3.1 FastAPI + FastMCP Server
 
-- [ ] Create `app/mcp_server.py` (complete code from spec section 4)
-- [ ] Implement 8 MCP tools with handlers:
+- [ ] Create `app/mcp_server.py` with FastAPI base and FastMCP mounting
+- [ ] Implement 8 MCP tools with @mcp.tool() decorators:
   - get_recent_activities
   - get_activity_details
   - get_activity_by_date_range
@@ -90,11 +78,9 @@ Implementation plan for building a Model Context Protocol (MCP) server that expo
   - get_training_load
   - get_user_feedback
   - get_llm_summary
-- [ ] Implement FastAPI endpoints:
-  - GET `/` - Root endpoint
-  - GET `/health` - Health check
-  - POST `/tools/list` - List tools
-  - POST `/tools/call` - Execute tool
+- [ ] Mount FastMCP server at `/mcp` endpoint for HTTP transport (ZeroClaw)
+- [ ] Add FastAPI health check endpoint at `/health`
+- [ ] Add FastAPI tool execution endpoint at `/tools/call` (for testing)
 
 ### 3.2 Tool Helper Functions
 
@@ -117,15 +103,15 @@ Implementation plan for building a Model Context Protocol (MCP) server that expo
 ### 4.2 Database Setup
 
 - [ ] Run `docker-compose exec mcp-server alembic upgrade head`
-- [ ] Verify tables created in PostgreSQL
-- [ ] Access pgAdmin at http://localhost:5050
+- [ ] Verify tables created in Neon PostgreSQL
 - [ ] Test database connection
 
 ### 4.3 MCP Server Verification
 
-- [ ] Test health check: `curl http://localhost:8000/health`
-- [ ] Test tools list: `curl -X POST http://localhost:8000/tools/list`
-- [ ] Test tool call: `curl -X POST http://localhost:8000/tools/call`
+- [ ] Test FastAPI health check: `curl http://localhost:8000/health`
+- [ ] Test MCP endpoint: `curl http://localhost:8000/mcp`
+- [ ] Verify tools are registered via logs
+- [ ] Test tool execution via HTTP endpoint
 - [ ] Check logs: `docker-compose logs -f mcp-server`
 
 ---
@@ -134,14 +120,14 @@ Implementation plan for building a Model Context Protocol (MCP) server that expo
 
 ### 5.1 Create Ingestion Scripts
 
-- [ ] Create `scripts/ingest_garmin.py` (spec section Phase 5)
+- [ ] Create `scripts/ingest_garmin.py` for initial data import
 - [ ] Create `scripts/sync_garmin.py` for periodic sync
 - [ ] Test Garmin data ingestion
 - [ ] Verify HR data is stored correctly
 
 ### 5.2 Populate Database
 
-- [ ] Run initial Garmin ingestion (50 activities)
+- [ ] Run initial Garmin ingestion (5 most recent activities)
 - [ ] Verify activities in database
 - [ ] Verify HR data for activities
 - [ ] Test queries against populated database
@@ -173,50 +159,37 @@ Implementation plan for building a Model Context Protocol (MCP) server that expo
 
 ---
 
-## Phase 7: Client Integration Testing
+## Phase 7: ZeroClaw Integration
 
-### 7.1 Claude Desktop Setup
+### 7.1 ZeroClaw Setup
 
-- [ ] Create `scripts/claude_mcp_wrapper.sh` (spec section Testing with Claude Desktop)
-- [ ] Configure Claude Desktop config file
-- [ ] Test stdio transport connection
-- [ ] Test tool calls through Claude
+- [ ] Install ZeroClaw
+- [ ] Configure ZeroClaw MCP connection (HTTP transport to localhost:8000/mcp)
+- [ ] Set up LLM provider (Anthropic, OpenAI, or Ollama)
+- [ ] Configure ZeroClaw channels (Discord, Telegram, CLI, etc.)
+- [ ] Test tool calls through ZeroClaw
 - [ ] Test conversational queries
 - [ ] Test multi-step tool chaining
 
-### 7.2 ZeroClaw Setup
-
-- [ ] Install ZeroClaw
-- [ ] Configure ZeroClaw MCP connection (HTTP transport)
-- [ ] Test tool calls through ZeroClaw
-- [ ] Test WhatsApp channel integration
-- [ ] Test conversational queries
-
 ---
 
-## Phase 8: Comparison & Evaluation
+## Phase 8: Testing & Verification
 
-### 8.1 Claude Desktop Evaluation
+### 8.1 ZeroClaw Testing
 
-- [ ] Document setup difficulty
-- [ ] Evaluate user experience
-- [ ] Test feature completeness
-- [ ] Note limitations and bugs
+- [ ] Test all 8 Garmin MCP tools through ZeroClaw
+- [ ] Test channel integrations (Discord, Telegram, CLI)
+- [ ] Test SOP engine with Garmin tools
+- [ ] Test approval gates for high-risk operations
+- [ ] Test tool receipts and audit logging
+- [ ] Verify privacy guarantees (local execution if using Ollama)
 
-### 8.2 ZeroClaw Evaluation
+### 8.2 Performance Testing
 
-- [ ] Document setup difficulty
-- [ ] Evaluate user experience
-- [ ] Test feature completeness
-- [ ] Note limitations and bugs
-
-### 8.3 Final Report
-
-- [ ] Compare both approaches
-- [ ] Document pros/cons
-- [ ] Compare privacy models
-- [ ] Compare deployment models
-- [ ] Make recommendation
+- [ ] Test with large activity datasets
+- [ ] Test concurrent tool calls
+- [ ] Test memory usage under load
+- [ ] Test response times
 
 ---
 
@@ -225,21 +198,17 @@ Implementation plan for building a Model Context Protocol (MCP) server that expo
 ### Required Software
 
 - Docker Desktop
-- Python 3.11+
-- Claude Desktop App (for testing)
-- ZeroClaw (for testing)
+- Python 3.12+
+- ZeroClaw
 
 ### Required Accounts
 
 - Garmin Connect account
-- Strava account (optional, with API access)
-- Anthropic Claude account (for Claude Desktop)
+- LLM provider account (Anthropic, OpenAI, or Ollama for local)
 
 ### Environment Variables
 
-- `DB_PASSWORD` - PostgreSQL password
-- `PGADMIN_EMAIL` - pgAdmin login email
-- `PGADMIN_PASSWORD` - pgAdmin password
+- `DATABASE_URL` - Neon PostgreSQL connection string
 - `GARMIN_EMAIL` - Garmin login email
 - `GARMIN_PASSWORD` - Garmin login password
 
@@ -249,17 +218,18 @@ Implementation plan for building a Model Context Protocol (MCP) server that expo
 
 ### Infrastructure
 
-- [ ] All Docker containers start successfully
-- [ ] PostgreSQL database initialized with correct schema
-- [ ] pgAdmin accessible at http://localhost:5050
-- [ ] MCP server accessible at http://localhost:8000
+- [ ] Docker container starts successfully
+- [ ] Neon PostgreSQL database initialized with correct schema
+- [ ] FastAPI server accessible at http://localhost:8000
+- [ ] MCP endpoint accessible at http://localhost:8000/mcp
 
 ### MCP Server
 
-- [ ] Tools list endpoint returns 8 valid tool definitions
-- [ ] Tool call endpoint executes functions correctly
+- [ ] FastMCP server starts successfully
+- [ ] FastMCP mounts at /mcp endpoint
+- [ ] 8 tools are registered and discoverable
+- [ ] Tool execution works correctly via HTTP endpoint
 - [ ] Garmin data retrieval works
-- [ ] Strava data retrieval works (if configured)
 - [ ] PostgreSQL queries work
 - [ ] Error handling works properly
 - [ ] HR data aggregation works
@@ -270,28 +240,23 @@ Implementation plan for building a Model Context Protocol (MCP) server that expo
 - [ ] HR time series data stored correctly
 - [ ] Database queries return expected results
 
-### Claude Desktop Integration
-
-- [ ] MCP server connects via stdio wrapper
-- [ ] Claude can call tools successfully
-- [ ] Conversational queries work (e.g., "Compare my last 5 runs")
-- [ ] Multi-step chaining works
-
 ### ZeroClaw Integration
 
-- [ ] MCP server connects via HTTP
+- [ ] FastMCP server connects via HTTP at /mcp endpoint
 - [ ] ZeroClaw can call tools successfully
-- [ ] WhatsApp integration works (if configured)
+- [ ] Channel integrations work (Discord, Telegram, CLI)
 - [ ] Conversational queries work
+- [ ] Multi-step chaining works
+- [ ] SOP engine works with Garmin tools
+- [ ] Approval gates function correctly
 
 ---
 
 ## Notes
 
-- All code implementations are provided in `mcp-server-spec.md`
-- The spec is self-contained - no need to reference parent project
-- Prioritize getting Claude Desktop working first (simpler setup)
+- ZeroClaw uses HTTP transport to connect to MCP server at localhost:8000/mcp
 - Hot reload is enabled in docker-compose for development
 - Use pgAdmin for database inspection and queries
 - All environment variables must be set in `.env` file
 - Never commit `.env` file to version control
+- ZeroClaw supports 30+ channels - configure as needed

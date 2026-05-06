@@ -1,0 +1,25 @@
+# FastAPI and FastMCP
+fastapi>=0.110.0
+uvicorn[standard]==0.24.0
+fastmcp==0.2.0
+
+# MCP Server
+mcp>=1.0.0
+
+# Database
+sqlalchemy==2.0.23
+alembic==1.12.1
+psycopg2-binary==2.9.9
+
+# Garmin Connect API
+garminconnect==0.3.3
+
+# Utilities
+pydantic>=2.5.3
+python-dotenv==1.0.0
+requests==2.31.0
+httpx>=0.26.0
+
+# Development
+pytest==7.4.3
+pytest-asyncio==0.21.1
