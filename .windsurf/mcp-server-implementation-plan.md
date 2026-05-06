@@ -44,10 +44,10 @@ Implementation plan for building a Model Context Protocol (MCP) server that expo
 
 ### 1.4 Initialize Database
 
-- [ ] Create `app/database.py` with sync SQLAlchemy models for activities, hr_data, user_feedback, llm_summaries
+- [ ] Create `backend/app/database.py` with sync SQLAlchemy models for activities, hr_data, user_feedback, llm_summaries
 - [ ] Set up Alembic for database migrations
-- [ ] Create initial migration `alembic/versions/001_initial_schema.py`
-- [ ] Test Neon PostgreSQL connectivity
+- [ ] Create initial migration `backend/alembic/versions/001_initial_schema.py`
+- [ ] Test PostgreSQL connectivity
 
 ---
 
@@ -55,7 +55,7 @@ Implementation plan for building a Model Context Protocol (MCP) server that expo
 
 ### 2.1 Garmin Client
 
-- [ ] Create `app/clients/garmin.py` using python-garminconnect library
+- [ ] Create `backend/app/clients/garmin.py` using python-garminconnect library
 - [ ] Implement authentication with email/password
 - [ ] Implement `get_activities()` method
 - [ ] Implement `get_activity_details()` method
@@ -68,7 +68,7 @@ Implementation plan for building a Model Context Protocol (MCP) server that expo
 
 ### 3.1 FastAPI + FastMCP Server
 
-- [ ] Create `app/mcp_server.py` with FastAPI base and FastMCP mounting
+- [ ] Create `backend/app/mcp_server.py` with FastAPI base and FastMCP mounting
 - [ ] Implement 8 MCP tools with @mcp.tool() decorators:
   - get_recent_activities
   - get_activity_details
@@ -102,8 +102,8 @@ Implementation plan for building a Model Context Protocol (MCP) server that expo
 
 ### 4.2 Database Setup
 
-- [ ] Run `docker-compose exec mcp-server alembic upgrade head`
-- [ ] Verify tables created in Neon PostgreSQL
+- [ ] Run `docker-compose exec backend alembic upgrade head`
+- [ ] Verify tables created in PostgreSQL
 - [ ] Test database connection
 
 ### 4.3 MCP Server Verification
@@ -112,7 +112,7 @@ Implementation plan for building a Model Context Protocol (MCP) server that expo
 - [ ] Test MCP endpoint: `curl http://localhost:8000/mcp`
 - [ ] Verify tools are registered via logs
 - [ ] Test tool execution via HTTP endpoint
-- [ ] Check logs: `docker-compose logs -f mcp-server`
+- [ ] Check logs: `docker-compose logs -f backend`
 
 ---
 
@@ -120,8 +120,8 @@ Implementation plan for building a Model Context Protocol (MCP) server that expo
 
 ### 5.1 Create Ingestion Scripts
 
-- [ ] Create `scripts/ingest_garmin.py` for initial data import
-- [ ] Create `scripts/sync_garmin.py` for periodic sync
+- [ ] Create `backend/scripts/ingest_garmin.py` for initial data import
+- [ ] Create `backend/scripts/sync_garmin.py` for periodic sync
 - [ ] Test Garmin data ingestion
 - [ ] Verify HR data is stored correctly
 
@@ -163,8 +163,8 @@ Implementation plan for building a Model Context Protocol (MCP) server that expo
 
 ### 7.1 ZeroClaw Setup
 
-- [ ] Install ZeroClaw
-- [ ] Configure ZeroClaw MCP connection (HTTP transport to localhost:8000/mcp)
+- [x] ZeroClaw Docker configuration created
+- [x] Configure ZeroClaw MCP connection (HTTP transport to backend:8000/mcp)
 - [ ] Set up LLM provider (Anthropic, OpenAI, or Ollama)
 - [ ] Configure ZeroClaw channels (Discord, Telegram, CLI, etc.)
 - [ ] Test tool calls through ZeroClaw
@@ -208,9 +208,11 @@ Implementation plan for building a Model Context Protocol (MCP) server that expo
 
 ### Environment Variables
 
-- `DATABASE_URL` - Neon PostgreSQL connection string
+- `DATABASE_URL` - PostgreSQL connection string
 - `GARMIN_EMAIL` - Garmin login email
 - `GARMIN_PASSWORD` - Garmin login password
+- `ANTHROPIC_API_KEY` - Anthropic API key for ZeroClaw
+- `OPENAI_API_KEY` - OpenAI API key for ZeroClaw
 
 ---
 
@@ -218,8 +220,8 @@ Implementation plan for building a Model Context Protocol (MCP) server that expo
 
 ### Infrastructure
 
-- [ ] Docker container starts successfully
-- [ ] Neon PostgreSQL database initialized with correct schema
+- [x] Docker container starts successfully
+- [ ] PostgreSQL database initialized with correct schema
 - [ ] FastAPI server accessible at http://localhost:8000
 - [ ] MCP endpoint accessible at http://localhost:8000/mcp
 

@@ -1,5 +1,5 @@
 # ZeroClaw Dockerfile
-FROM rust:1.75-slim as builder
+FROM rust:1.88-slim as builder
 
 WORKDIR /app
 
@@ -7,6 +7,7 @@ WORKDIR /app
 RUN apt-get update && apt-get install -y \
     pkg-config \
     libssl-dev \
+    git \
     && rm -rf /var/lib/apt/lists/*
 
 # Clone and build ZeroClaw
